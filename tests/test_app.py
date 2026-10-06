@@ -27,3 +27,20 @@ def test_unregister_missing_participant_returns_404():
 
     response = client.delete(f"/activities/{activity_name}/participants/{email}")
     assert response.status_code == 404
+
+
+def test_signup_fails_when_activity_is_full():
+    activity_name = "Chess Club"
+    max_participants = activities[activity_name]["max_participants"]
+    full_participants = [f"student{i}@mergington.edu" for i in range(max_participants)]
+    original_participants = activities[activity_name]["participants"]
+
+    try:
+        activities[activity_name]["participants"] = full_participants
+
+        response = client.post(f"/activities/{activity_name}/signup?email=overflow@mergington.edu")
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Activity is full"
+    finally:
+        activities[activity_name]["participants"] = original_participants
